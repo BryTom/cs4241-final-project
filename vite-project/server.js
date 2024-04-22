@@ -27,6 +27,7 @@ socketServer.on( 'connection', client => {
 
     // add client to client list
     clients.push( client )
+    clients.forEach(c => {c.send(clients)})
 })
 
 server.listen( 3000 )

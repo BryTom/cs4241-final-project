@@ -10,12 +10,13 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.0.2",
-    "svelte": "^4.2.12",
-    "vite": "^5.2.0"
+    "svelte": "^4.2.15",
+    "vite": "^5.2.10"
   },
   "dependencies": {
     "express": "^4.19.2",
     "vite-express": "^0.16.0",
+    "vite-plugin-svelte-monorepo": "github:sveltejs/vite-plugin-svelte",
     "ws": "^8.16.0"
   }
 }

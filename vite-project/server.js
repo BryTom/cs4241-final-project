@@ -9,12 +9,50 @@ import express from 'express'
 import http from 'http'
 import ViteExpress from 'vite-express'
 import { WebSocketServer } from 'ws'
+import session from 'express-session'
+import passport from 'passport'
+import GitHubStrategy from 'passport-github2'
 
 const app = express()
 
 const server = http.createServer( app ),
     socketServer = new WebSocketServer({ server }),
     clients = []
+
+    app.use(session({
+        secret: 'your_secret_here',
+        resave: true,
+        saveUninitialized: true
+    }))
+    
+    app.use(passport.initialize())
+    app.use(passport.session())
+    
+    passport.use(new GitHubStrategy({
+        clientID: 'your_github_client_id',
+        clientSecret: 'your_github_client_secret',
+        callbackURL: 'http://localhost:5173/auth/github/callback'
+    },
+    (accessToken, refreshToken, profile, done) => {
+        return done(null, profile)
+    }))
+    
+    passport.serializeUser((user, done) => {
+        done(null, user)
+    })
+    
+    passport.deserializeUser((obj, done) => {
+        done(null, obj)
+    })
+    
+    app.get('/auth/github', passport.authenticate('github'))
+    
+    app.get('/auth/github/callback', passport.authenticate('github', { failureRedirect: '/' }),
+        (req, res) => {
+            // Successful authentication, redirect home.
+            res.redirect('/')
+        }
+    )
 
 socketServer.on( 'connection', client => {
     console.log( 'connect!' )

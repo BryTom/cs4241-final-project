@@ -36,6 +36,12 @@ const server = http.createServer( app ),
         callbackURL: 'http://localhost:5173/auth/github/callback'
     },
     (accessToken, refreshToken, profile, done) => {
+        req.session.user = {
+            id: profile.id,
+            username: profile.username,
+            avatarUrl: profile.photos[0].value
+        }
+        
         return done(null, profile)
     }))
     
@@ -55,6 +61,14 @@ const server = http.createServer( app ),
             res.redirect('/')
         }
     )
+
+    app.get('/api/user', (req, res) => {
+        if (req.isAuthenticated()) {
+            res.json(req.user);
+        } else {
+            res.status(401).json({ error: 'Not authenticated' });
+        }
+    })
 
 socketServer.on( 'connection', client => {
     console.log( 'connect!' )

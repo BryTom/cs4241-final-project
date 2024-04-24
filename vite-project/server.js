@@ -12,6 +12,8 @@ import { WebSocketServer } from 'ws'
 import session from 'express-session'
 import passport from 'passport'
 import GitHubStrategy from 'passport-github2'
+import dotenv from 'dotenv'
+dotenv.config()
 
 const app = express()
 
@@ -20,7 +22,7 @@ const server = http.createServer( app ),
     clients = []
 
     app.use(session({
-        secret: 'your_secret_here',
+        secret: process.env.SECRET,
         resave: true,
         saveUninitialized: true
     }))
@@ -29,8 +31,8 @@ const server = http.createServer( app ),
     app.use(passport.session())
     
     passport.use(new GitHubStrategy({
-        clientID: 'your_github_client_id',
-        clientSecret: 'your_github_client_secret',
+        clientID: process.env.GITHUB_ID,
+        clientSecret: process.env.GITHUB_SECRET,
         callbackURL: 'http://localhost:5173/auth/github/callback'
     },
     (accessToken, refreshToken, profile, done) => {

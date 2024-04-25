@@ -20,9 +20,11 @@ const app = express()
 
 app.use(session({
     secret: process.env.SECRET,
-    resave: true,
-    saveUninitialized: true
-}))
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: true }
+}));
+
 
 app.use(passport.initialize())
 app.use(passport.session())
@@ -30,16 +32,17 @@ app.use(passport.session())
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_ID,
     clientSecret: process.env.GITHUB_SECRET,
-    callbackURL: 'http://localhost:5173/auth/github/callback'
+    callbackURL: 'http://localhost:5173/auth/github/callback',
+    passReqToCallback: true
 }, (req, accessToken, refreshToken, profile, done) => {
-    // Now you can safely use 'req' here
     req.session.user = {
         id: profile.id,
         username: profile.username,
         avatarUrl: profile.photos[0].value
     };
-    return done(null, profile);
+    done(null, profile);
 }));
+
 
 passport.serializeUser((user, done) => {
     done(null, user)
@@ -58,7 +61,6 @@ app.get('/auth/github', (req, res, next) => {
 
 app.get('/auth/github/callback', passport.authenticate('github', { failureRedirect: '/' }),
     (req, res) => {
-        // Successful authentication, redirect home.
         res.redirect('/')
     }
 )
@@ -78,13 +80,9 @@ const server = http.createServer( app ),
 socketServer.on( 'connection', client => {
     console.log( 'connect!' )
 
-    // when the server receives a message from this client...
     client.on( 'message', msg => {
-        // send msg to every client EXCEPT the one who originally sent it
         clients.forEach( c => { c.send( msg ) })
     })
-
-    // add client to client list
     clients.push( client )
 })
 

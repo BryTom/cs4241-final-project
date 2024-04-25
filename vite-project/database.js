@@ -1,4 +1,7 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+import { MongoClient, ServerApiVersion } from 'mongodb'
+// const { MongoClient, ServerApiVersion } = require('mongodb');
+
+
 
 const dbPwd = "admin"
 
@@ -49,7 +52,7 @@ async function addUser(userID){
 }
 
 // Add a win to a user's account
-async function addWin(userID){
+export async function addWin(userID){
     try {
         const db = client.db("webwareFinal");
         const collection = db.collection("users");
@@ -79,7 +82,7 @@ async function addLoss(userID){
     }
 }
 
-// Function to add game history to user
+// Add a game to the user's history
 async function addGameHistory(userID, gameID) {
     try {
         await client.connect();
@@ -108,6 +111,43 @@ async function addGameHistory(userID, gameID) {
     } finally {
         await client.close();
     }
+}
+
+// Set the winner of a game
+async function updateWinner(gameID, userID) {
+    try {
+        // Connect to the database
+        const db = client.db("webwareFinal");
+
+        // Update the document
+        const result = await db.collection('games').updateOne(
+            { gameID: gameID },
+            { $set: { winner: userID } }
+        );
+
+        if (result.modifiedCount === 1) {
+            console.log('Winner updated successfully.');
+        } else {
+            console.log('No document updated.');
+        }
+    } catch (err) {
+        console.log('Error occurred while updating winner:', err);
+    }
+}
+
+// Call to end a game. Adds win/loss data to players and sets history. Takes in a gameID, the winnerID, and array of loserIDs
+async function concludeGame(gameID, winnerID, loserIDs){
+    // Add a win to winner, add game to user history, set winner of game
+    await addWin(winnerID);
+    await addGameHistory(winnerID, gameID)
+    await updateWinner(gameID, winnerID)
+
+    for(let loserID of loserIDs){
+        await addLoss(loserID)
+        await addGameHistory(loserID, gameID)
+    }
+
+    console.log(`The game is over! ${winnerID} wins!`)
 }
 
 module.exports = {

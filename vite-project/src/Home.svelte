@@ -19,12 +19,7 @@
     import { Link, navigate } from 'svelte-routing';
 
     // Function to start the authentication process
-    function signIn() {
-        navigate('/auth/github');
-    }
 </script>
-
-<button on:click={signIn}>Sign In</button>
 
 {#if user}
     <p>Welcome, {user.username}!</p>
@@ -32,7 +27,7 @@
 {:else}
     <p>Not authenticated</p>
 {/if}
-
+<a href="/auth/github">Sign In with GitHub</a>
 <nav>
     <Link to="/home">New Game</Link>
     <Link to="/game">Join Game</Link>

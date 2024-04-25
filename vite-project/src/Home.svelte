@@ -1,9 +1,11 @@
 <!-- NavigationLinks.svelte -->
 <script>
     import { Link } from 'svelte-routing';
+    import {addWin} from './database';
+
 </script>
 
-<button> Test </button>
+<button on:click={() => addWin("exampleName") }> Test </button>
 
 <nav>
     <Link to="/login" >Sign In</Link>

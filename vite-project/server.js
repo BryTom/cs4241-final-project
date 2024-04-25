@@ -16,6 +16,10 @@ const server = http.createServer( app ),
     socketServer = new WebSocketServer({ server }),
     clients = []
 
+let gameStarted = false
+let numberOfPlayer
+
+
 socketServer.on( 'connection', client => {
     console.log( 'connect!' )
 

@@ -1,5 +1,5 @@
 <script>
-    let client = [];
+    let players = [];
   
     const ws = new WebSocket( 'ws://127.0.0.1:3000' )
   
@@ -10,22 +10,7 @@
         // add message to end of msgs array,
         // re-assign to trigger UI update
         const message = await msg.data.text()
-        switch(message){
-          case "1":
-            hp1--;
-            break;
-          case "2":
-            hp2--;
-            break;
-          case "3":
-            hp3--;
-            break;
-          case "4":
-            hp4--;
-            break;
-        }
-  
-  
+
       }
     }
   
@@ -41,17 +26,19 @@
       console.log(playerId)
       ws.send(playerId)
     }
+
+    const creategame = function(){
+      var playerNumberInput = document.getElementById("numberOfPlayer");
+      console.log(playerNumberInput.value)
+      ws.send(playerNumberInput.value)
+    }
   
   </script>
   
   <!--<input type='text' on:change={send} />-->
   
-  
-  
-  <button on:click={countdown} id="1">{hp1}</button>
-  <button on:click={countdown} id="2">{hp2}</button>
-  <button on:click={countdown} id="3">{hp3}</button>
-  <button on:click={countdown} id="4">{hp4}</button>
+  <input id="numberOfPlayer" type="number">
+  <button type="submit" on:click={creategame}>Create Game</button>
   
   
   <!--{#each msgs as msg }-->

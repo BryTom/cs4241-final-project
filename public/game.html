@@ -5,12 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create Game</title>
-    <script src="./src/gameCreation.js"></script>
+    <script src="./js/game.js"></script>
   </head>
   <body>
-    <div id="app"></div>
-    <input id="numberOfPlayer" type="number">
-  <button type="submit" on:click={creategame}>Create Game</button>
+    <div class="player-container">
+        <label for="numPlayers">Number of Players:</label>
+        <input type="number" id="numPlayers" min="1">
+        <button onclick="generatePlayers()">Generate Players</button>
+    </div>
   </body>
 </html>
 

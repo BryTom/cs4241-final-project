@@ -2,13 +2,19 @@ const express = require("express"),
       axios = require("axios"),
       path = require("path"),
       session = require("express-session"),
-      { MongoClient, ObjectId } = require("mongodb"),
+      { MongoClient, ObjectId,  ServerApiVersion } = require("mongodb"),
       socketIO = require('socket.io'),
       dotenv = require('dotenv').config({ path: "./.env" }),
       http = require('http'),
       app = express(),
       clientID = process.env.GITHUB_ID,
       clientSecret = process.env.GITHUB_SECRET;
+
+let gameStatus = false
+let players=[]
+let numberOfPlayers;
+let startingHealth;
+
 
 app.use( express.static('public') )
 app.use( express.json() )
@@ -18,6 +24,7 @@ app.use(session({
     saveUninitialized: false,
     })
 );
+
 
 const dbPwd = "admin"
 
@@ -49,9 +56,13 @@ const server = http.createServer( app )
 
 var io = socketIO(server);
 
+
 // make connection with user from server side
-io.on('connection', (socket) => {
+io.on('connection', function(socket) {
+
     console.log('New user connected');
+
+    
     //emit message from server to user
     socket.emit('newMessage',
         {
@@ -65,7 +76,7 @@ io.on('connection', (socket) => {
         (newMessage) => {
             console.log('newMessage', newMessage);
         });
-
+    players.push(socket);
     // when server disconnects from user
     socket.on('disconnect',
         () => {
@@ -73,6 +84,21 @@ io.on('connection', (socket) => {
         });
 });
  
+
+
+app.post("/creategame", (req, res) => {
+    numberOfPlayers = req.body.numberOfPlayers;
+    startingHealth = req.body.startingHealth;
+    console.log("Num of Player = "+numberOfPlayers)
+    console.log("Starting Health = "+startingHealth)
+    const info = {
+        gameInit: true,
+        numberOfPlayers: numberOfPlayers,
+        startingHealth: startingHealth,
+    }
+    res.json(info);
+});
+
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/index.html");
 });

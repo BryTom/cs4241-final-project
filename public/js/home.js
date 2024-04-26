@@ -9,6 +9,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     welcomeMessage.innerText = `Welcome Back, ${user}!`;
 
      const homeImage = document.getElementById("background");
-    homeImage.style.backgroundImage = 'url(${pfp})';
+    homeImage.style.backgroundImage = `url(${pfp})`;
   });
   

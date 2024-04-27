@@ -16,7 +16,7 @@ app.use(session({
     secret: "secret_key",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: true }
+    cookie: { secure: false }
 })
 );
 
@@ -124,28 +124,33 @@ app.get("/success", async (req, res) => {
 
     const body = JSON.stringify(info);
 
-    // const cookieResponse = await fetch( "/store", {
-    //     method:"POST",
-    //     body
-    //   }).then((aResponse)=>{
-    //     console.log(aResponse);
-    //   });
+    const cookieResponse = await fetch( process.env.URL + "/store", {
+        method:"POST",
+        body
+      }).then((aResponse)=>{
+        //console.log(aResponse);
+      });
+
+    const cookie = await fetch(process.env.URL + "/retrieve").then((aRes) => {
+        console.log(aRes);
+    });
+
 
     res.sendFile(path.join(__dirname, "public", "home.html"));
 });
 
 app.get("/userdata", async (req, res) => {
-    console.log(userdata);
+    //console.log(userdata);
     res.json(userdata);
 })
 
-app.get('/store', (req, res) => {
+app.post('/store', async (req, res) => {
     // Save some data in the session
     req.session.username = req.body.username;
     res.send('Username set');
 });
 
-app.get('/retrieve', (req, res) => {
+app.get('/retrieve', async (req, res) => {
     // Check if the session data exists before trying to access it
     if (req.session.username) {
         res.send(`Here's your session data: ${req.session.username}`);

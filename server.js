@@ -1,22 +1,23 @@
 const express = require("express"),
-      axios = require("axios"),
-      path = require("path"),
-      session = require("express-session"),
-      { MongoClient, ServerApiVersion, ObjectId } = require("mongodb"),
-      socketIO = require('socket.io'),
-      dotenv = require('dotenv').config({ path: "./.env" }),
-      http = require('http'),
-      app = express(),
-      clientID = process.env.GITHUB_ID,
-      clientSecret = process.env.GITHUB_SECRET;
+    axios = require("axios"),
+    path = require("path"),
+    session = require("express-session"),
+    { MongoClient, ServerApiVersion, ObjectId } = require("mongodb"),
+    socketIO = require('socket.io'),
+    dotenv = require('dotenv').config({ path: "./.env" }),
+    http = require('http'),
+    app = express(),
+    clientID = process.env.GITHUB_ID,
+    clientSecret = process.env.GITHUB_SECRET;
 
-app.use( express.static('public') )
-app.use( express.json() )
+app.use(express.static('public'))
+app.use(express.json())
 app.use(session({
     secret: "secret_key",
     resave: false,
     saveUninitialized: false,
-    })
+    cookie: { secure: false }
+})
 );
 
 const dbPwd = "admin"
@@ -47,7 +48,7 @@ async function run() {
     }
 }
 
-const server = http.createServer( app )
+const server = http.createServer(app)
 
 var io = socketIO(server);
 
@@ -74,27 +75,27 @@ io.on('connection', (socket) => {
             console.log('disconnected from user');
         });
 });
- 
+
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/index.html");
 });
 
 app.get("/auth/github/login", (req, res) => {
     res.redirect(
-      `https://github.com/login/oauth/authorize?client_id=${clientID}`
+        `https://github.com/login/oauth/authorize?client_id=${clientID}`
     );
-  });
+});
 
-  app.get("/auth/github/callback", async (req, res) => {
+app.get("/auth/github/callback", async (req, res) => {
     const requestToken = req.query.code;
     const response = await axios.post(
-      `https://github.com/login/oauth/access_token?client_id=${clientID}&client_secret=${clientSecret}&code=${requestToken}`,
-      {},
-      {
-        headers: {
-          accept: "application/json",
-        },
-      }
+        `https://github.com/login/oauth/access_token?client_id=${clientID}&client_secret=${clientSecret}&code=${requestToken}`,
+        {},
+        {
+            headers: {
+                accept: "application/json",
+            },
+        }
     );
 
     access_token = response.data.access_token;
@@ -102,37 +103,68 @@ app.get("/auth/github/login", (req, res) => {
     req.session.accessToken = access_token;
 
     res.redirect("/success");
-  });
+});
 
-  app.get("/success", async (req, res) => {
+app.get("/success", async (req, res) => {
     if (!req.session.accessToken) {
-      res.redirect("/auth/github/login");
-      return;
+        res.redirect("/auth/github/login");
+        return;
     }
 
     const response = await axios.get("https://api.github.com/user", {
-      headers: {
-        Authorization: `token ${req.session.accessToken}`,
-      },
+        headers: {
+            Authorization: `token ${req.session.accessToken}`,
+        },
     });
     const data = response.data;
-    //console.log(data)
-    userdata.push({username: data.login, name: data.name, id: data.id, pfp: data.avatar_url});
+
+    const info = { username: data.login, name: data.name, id: data.id, pfp: data.avatar_url }
+    
+    userdata.push(info);
+
+    const body = JSON.stringify(info);
+
+    const cookieResponse = await fetch( process.env.URL + "/store", {
+        method:"POST",
+        body
+      }).then((aResponse)=>{
+        //console.log(aResponse);
+      });
+
+    const cookie = await fetch(process.env.URL + "/retrieve").then((aRes) => {
+        console.log(aRes);
+    });
+
 
     res.sendFile(path.join(__dirname, "public", "home.html"));
-  });
+});
 
-  app.get("/userdata", async (req, res) => {
-    console.log(userdata);
+app.get("/userdata", async (req, res) => {
+    //console.log(userdata);
     res.json(userdata);
-  })
+})
+
+app.post('/store', async (req, res) => {
+    // Save some data in the session
+    req.session.username = req.body.username;
+    res.send('Username set');
+});
+
+app.get('/retrieve', async (req, res) => {
+    // Check if the session data exists before trying to access it
+    if (req.session.username) {
+        res.send(`Here's your session data: ${req.session.username}`);
+    } else {
+        res.send('No session data found.');
+    }
+});
 
 run().catch(console.dir);
 
-server.listen( 3000 )
+server.listen(3000)
 
 // Add a user into the database, use GitHub username as userID (?)
-async function addUser(userID){
+async function addUser(userID) {
     try {
         const db = client.db("webwareFinal");
         const collection = db.collection("users");
@@ -152,7 +184,7 @@ async function addUser(userID){
 }
 
 // Add a win to a user's account
-async function addWin(userID){
+async function addWin(userID) {
     try {
         const db = client.db("webwareFinal");
         const collection = db.collection("users");
@@ -167,7 +199,7 @@ async function addWin(userID){
     }
 }
 //Add a loss to a user's account
-async function addLoss(userID){
+async function addLoss(userID) {
     try {
         const db = client.db("webwareFinal");
         const collection = db.collection("users");
@@ -236,13 +268,13 @@ async function updateWinner(gameID, userID) {
 }
 
 // Call to end a game. Adds win/loss data to players and sets history. Takes in a gameID, the winnerID, and array of loserIDs
-async function concludeGame(gameID, winnerID, loserIDs){
+async function concludeGame(gameID, winnerID, loserIDs) {
     // Add a win to winner, add game to user history, set winner of game
     await addWin(winnerID);
     await addGameHistory(winnerID, gameID)
     await updateWinner(gameID, winnerID)
 
-    for(let loserID of loserIDs){
+    for (let loserID of loserIDs) {
         await addLoss(loserID)
         await addGameHistory(loserID, gameID)
     }
